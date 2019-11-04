@@ -128,18 +128,18 @@ class SEMLoad(object):
         for line in open(path, 'r'):
             line = line.strip('\n').split(' ')
             sens = line[5:]
-            rel = int(line[0])
+            rel = int(line[0]) ## label 关系类别
 
-            ent1 = (int(line[1]), int(line[2]))
-            ent2 = (int(line[3]), int(line[4]))
+            ent1 = (int(line[1]), int(line[2])) ## 实体1起始和结束位置
+            ent2 = (int(line[3]), int(line[4]))## 实体2起始和结束位置
 
             all_labels.append(rel)
-            sens = list(map(lambda x: self.word2id.get(x, self.word2id['<PAD>']), sens))
+            sens = list(map(lambda x: self.word2id.get(x, self.word2id['<PAD>']), sens))##句子向量化
 
-            all_sens.append((ent1, ent2, sens))
+            all_sens.append((ent1, ent2, sens)) ## 两个实体起始位置，句子向量化表示
 
-        lexical_feature = self.get_lexical_feature(all_sens)
-        sen_feature = self.get_sentence_feature(all_sens)
+        lexical_feature = self.get_lexical_feature(all_sens)##每一行会出现一个列表，列表内容是这一个样本的重点词汇，词汇用数字化表示
+        sen_feature = self.get_sentence_feature(all_sens)## 【句子向量表示，每个单词距离第一个实体位置，每个单词距离第二个实体位置】
 
         return lexical_feature, sen_feature, all_labels
 
@@ -155,11 +155,11 @@ class SEMLoad(object):
         lexical_feature = []
         for idx, sen in enumerate(sens):
             pos_e1, pos_e2, sen = sen
-            left_e1 = self.get_left_word(pos_e1, sen)
+            left_e1 = self.get_left_word(pos_e1, sen)##返回左边词汇数字化
             left_e2 = self.get_left_word(pos_e2, sen)
-            right_e1 = self.get_right_word(pos_e1, sen)
+            right_e1 = self.get_right_word(pos_e1, sen)##返回右边词汇数字化
             right_e2 = self.get_right_word(pos_e2, sen)
-            lexical_feature.append([sen[pos_e1[0]], left_e1, right_e1, sen[pos_e2[0]], left_e2, right_e2])
+            lexical_feature.append([sen[pos_e1[0]], left_e1, right_e1, sen[pos_e2[0]], left_e2, right_e2])##[第一个实体起始位置，第一个实体左边词汇，第一个实体右边词汇，第二个实体起始位置，第二个实体左边此话，第二个实体右边词汇]
 
         return lexical_feature
 
@@ -175,16 +175,16 @@ class SEMLoad(object):
         update_sens = []
 
         for sen in sens:
-            pos_e1, pos_e2, sen = sen
+            pos_e1, pos_e2, sen = sen##[(),(),()]:[实体1起始位置，实体2起始位置，句子向量化表示]
             pos_left = []
             pos_right = []
-            ori_len = len(sen)
+            ori_len = len(sen)##句子向量化表示
             for idx in range(ori_len):
-                p1 = self.get_pos_feature(idx - pos_e1[0])
-                p2 = self.get_pos_feature(idx - pos_e2[0])
+                p1 = self.get_pos_feature(idx - pos_e1[0])##距离第一个实体起始位置的距离 得到位置向量，输入句子中每个词汇距离第一个实体起始位置的距离
+                p2 = self.get_pos_feature(idx - pos_e2[0])##距离第二个实体起始位置的距离
                 pos_left.append(p1)
                 pos_right.append(p2)
-            if ori_len > self.max_len:
+            if ori_len > self.max_len:##如果大于最大长度，超过词汇特征不要
                 sen = sen[: self.max_len]
                 pos_left = pos_left[: self.max_len]
                 pos_right = pos_right[: self.max_len]
